@@ -1,6 +1,7 @@
 import { PrismaClient, UserRole, PostStatus, PostVisibility, ModerationStatus } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
+
 const prisma = new PrismaClient();
 
 async function main() {

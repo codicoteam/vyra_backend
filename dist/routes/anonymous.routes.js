@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const anonymous_controller_1 = require("../controllers/anonymous.controller");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.post('/publish', anonymous_controller_1.publishAnonymous);
+router.get('/pending', auth_1.authenticate, anonymous_controller_1.getPendingAnonymous);
+router.put('/:id/approve', auth_1.authenticate, anonymous_controller_1.approveAnonymous);
+router.put('/:id/reject', auth_1.authenticate, anonymous_controller_1.rejectAnonymous);
+exports.default = router;

@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authorize = exports.authenticate = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const env_1 = require("../config/env");
-const user_model_1 = require("../models/user.model");
+const prisma_1 = require("../config/prisma");
 const authenticate = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
@@ -15,7 +15,7 @@ const authenticate = async (req, res, next) => {
         }
         const token = authHeader.split(' ')[1];
         const decoded = jsonwebtoken_1.default.verify(token, env_1.config.jwtSecret);
-        const user = await user_model_1.User.findById(decoded.userId);
+        const user = await prisma_1.prisma.user.findUnique({ where: { id: decoded.userId } });
         if (!user) {
             return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'User not found' } });
         }

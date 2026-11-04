@@ -1,11 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const story_controller_1 = require("../controllers/story.controller");
-const auth_1 = require("../middleware/auth");
-const router = (0, express_1.Router)();
-router.get('/', story_controller_1.getStories);
-router.post('/', auth_1.authenticate, story_controller_1.createStory);
-router.post('/:id/like', auth_1.authenticate, story_controller_1.toggleLike);
-router.post('/:id/bookmark', auth_1.authenticate, story_controller_1.toggleBookmark);
-exports.default = router;
+const post_routes_1 = __importDefault(require("./post.routes"));
+exports.default = post_routes_1.default;

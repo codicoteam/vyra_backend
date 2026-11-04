@@ -1,93 +1,68 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserDashboardStats = getUserDashboardStats;
 exports.getStoryGrowthOverTime = getStoryGrowthOverTime;
 exports.getCategoryDistribution = getCategoryDistribution;
-const mongoose_1 = __importDefault(require("mongoose"));
-const story_model_1 = require("../models/story.model");
+const prisma_1 = require("../config/prisma");
 async function getUserDashboardStats(userId) {
-    return story_model_1.Story.aggregate([
+    const aggregate = await prisma_1.prisma.post.aggregate({
+        where: { userId, deletedAt: null },
+        _count: { id: true },
+        _sum: { viewCount: true, likeCount: true, bookmarkCount: true, readCount: true }
+    });
+    return [
         {
-            $match: {
-                userId: new mongoose_1.default.Types.ObjectId(userId),
-                deletedAt: null,
-            },
-        },
-        {
-            $group: {
-                _id: '$status',
-                count: { $sum: 1 },
-                totalViews: { $sum: '$viewCount' },
-                totalLikes: { $sum: '$likeCount' },
-                totalBookmarks: { $sum: '$bookmarkCount' },
-                totalReads: { $sum: '$readCount' },
-            },
-        },
-    ]);
+            _id: 'published',
+            count: aggregate._count.id || 0,
+            totalViews: aggregate._sum.viewCount || 0,
+            totalLikes: aggregate._sum.likeCount || 0,
+            totalBookmarks: aggregate._sum.bookmarkCount || 0,
+            totalReads: aggregate._sum.readCount || 0,
+        }
+    ];
 }
 async function getStoryGrowthOverTime(userId, months = 12) {
     const sinceDate = new Date();
     sinceDate.setMonth(sinceDate.getMonth() - months);
-    return story_model_1.Story.aggregate([
-        {
-            $match: {
-                userId: new mongoose_1.default.Types.ObjectId(userId),
-                publishedAt: { $gte: sinceDate },
-                status: 'published',
-                deletedAt: null,
-            },
+    const posts = await prisma_1.prisma.post.findMany({
+        where: {
+            userId,
+            publishedAt: { gte: sinceDate },
+            status: 'PUBLISHED',
+            deletedAt: null,
         },
-        {
-            $group: {
-                _id: {
-                    year: { $year: '$publishedAt' },
-                    month: { $month: '$publishedAt' },
-                },
-                count: { $sum: 1 },
-                totalViews: { $sum: '$viewCount' },
-                totalLikes: { $sum: '$likeCount' },
-            },
-        },
-        {
-            $sort: { '_id.year': 1, '_id.month': 1 },
-        },
-    ]);
+        select: { publishedAt: true, viewCount: true, likeCount: true }
+    });
+    const grouped = {};
+    for (const p of posts) {
+        if (!p.publishedAt)
+            continue;
+        const key = `${p.publishedAt.getFullYear()}-${p.publishedAt.getMonth() + 1}`;
+        if (!grouped[key]) {
+            grouped[key] = { count: 0, totalViews: 0, totalLikes: 0 };
+        }
+        grouped[key].count += 1;
+        grouped[key].totalViews += p.viewCount || 0;
+        grouped[key].totalLikes += p.likeCount || 0;
+    }
+    return Object.entries(grouped).map(([key, val]) => ({
+        _id: { year: parseInt(key.split('-')[0]), month: parseInt(key.split('-')[1]) },
+        ...val
+    }));
 }
 async function getCategoryDistribution() {
-    return story_model_1.Story.aggregate([
-        {
-            $match: {
-                status: 'published',
-                deletedAt: null,
-            },
-        },
-        {
-            $group: {
-                _id: '$categoryId',
-                count: { $sum: 1 },
-            },
-        },
-        {
-            $lookup: {
-                from: 'categories',
-                localField: '_id',
-                foreignField: '_id',
-                as: 'category',
-            },
-        },
-        { $unwind: '$category' },
-        {
-            $project: {
-                _id: 0,
-                category: '$category.name',
-                slug: '$category.slug',
-                color: '$category.color',
-                count: 1,
-            },
-        },
-        { $sort: { count: -1 } },
-    ]);
+    const categories = await prisma_1.prisma.category.findMany({
+        where: { isActive: true },
+        include: {
+            _count: {
+                select: { posts: true }
+            }
+        }
+    });
+    return categories.map((c) => ({
+        category: c.name,
+        slug: c.slug,
+        color: c.color,
+        count: c._count.posts || c.storiesCount || 0,
+    }));
 }

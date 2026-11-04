@@ -10,6 +10,7 @@ const env_1 = require("../config/env");
 const auth_paths_1 = require("./paths/auth.paths");
 const user_paths_1 = require("./paths/user.paths");
 const story_paths_1 = require("./paths/story.paths");
+const allPaths_1 = require("./allPaths");
 const auth_schema_1 = require("./schemas/auth.schema");
 const user_schema_1 = require("./schemas/user.schema");
 const story_schema_1 = require("./schemas/story.schema");
@@ -22,33 +23,38 @@ const options = {
             description: `
 # VYRA — Voices Yielding Research & Awareness
 
-## Premium Digital Publishing Platform API
+## Complete Digital Publishing Platform API (24 API Modules)
 
-### Features
-- **Authentication**: Email/Password, Google, GitHub, Twitter OAuth
-- **Content Management**: Stories, Research Papers, Awareness Campaigns
-- **Anonymous Publishing**: True anonymous content sharing
-- **File Management**: Images, Videos, Documents with virus scanning
-- **Social Features**: Likes, Bookmarks, Follows, Reading History
-- **Search**: Full-text search with MongoDB Atlas Search
-- **Notifications**: Real-time + Email digests
-- **Analytics**: Comprehensive content and user analytics
-- **Moderation**: Content reporting and admin review system
-- **Role-Based Access**: User, Editor, Admin, Super Admin roles
+### Available Modules:
+1. **Authentication API**: \`/auth\` (register, login, logout, refresh-token, forgot-password, reset-password, verify-email, me, change-password)
+2. **Users API**: \`/users\` (get users, user by id, username, profile, avatar, delete account)
+3. **Posts API**: \`/posts\` (CRUD, slug, publish, archive, duplicate, feature)
+4. **Drafts API**: \`/drafts\` (CRUD for user draft articles)
+5. **Categories API**: \`/categories\` (CRUD for categories)
+6. **Tags API**: \`/tags\` (CRUD for tags)
+7. **Likes API**: \`/posts/:id/like\` (like, unlike, list likes)
+8. **Bookmarks API**: \`/bookmarks\` (bookmark, remove, list bookmarks)
+9. **Following API**: \`/users/:id/follow\` (follow, unfollow, followers, following)
+10. **Notifications API**: \`/notifications\` (list, unread, mark read, mark all read, delete)
+11. **Search API**: \`/search\` (unified search, posts, users, categories, tags with filtering & pagination)
+12. **Media API**: \`/media\` (upload image, video, document, download & delete)
+13. **Anonymous Publishing API**: \`/anonymous\` (publish, pending, approve, reject)
+14. **Reports API**: \`/reports\` (create report, list, detail, update status, delete)
+15. **Email Digest API**: \`/email-digest\` (send digest, history, preferences)
+16. **Analytics API**: \`/analytics\` (dashboard, posts, users, categories analytics)
+17. **Admin API**: \`/admin\` (dashboard, user management, post management, reports, statistics)
+18. **Recommendations API**: \`/recommendations\` (main, following feed, trending)
+19. **Reading History API**: \`/history\` (record, list, remove history)
+20. **File Downloads API**: \`/downloads/:id\` (download PDF, DOCX, research paper, thesis docs)
+21. **Homepage API**: \`/home\` (aggregated home page endpoint)
+22. **Feed API**: \`/feed\` (main feed, following, trending, latest)
+23. **Saved Searches API**: \`/saved-searches\` (list, save, delete)
+24. **System API**: \`/health\`, \`/version\`, \`/status\`
 
 ### Authentication
 Most endpoints require JWT authentication. Include the token in the Authorization header:
 \`\`\`
 Authorization: Bearer {access_token}
-\`\`\`
-
-### Response Format
-\`\`\`json
-{
-  "success": true,
-  "data": { ... },
-  "message": "Operation successful"
-}
 \`\`\`
       `,
             contact: {
@@ -64,7 +70,7 @@ Authorization: Bearer {access_token}
         servers: [
             {
                 url: `http://localhost:${env_1.config.port}/api/v1`,
-                description: 'Development Server',
+                description: 'Development Server (API v1)',
             },
             {
                 url: 'https://api.vyra.com/api/v1',
@@ -87,7 +93,6 @@ Authorization: Bearer {access_token}
                 },
             },
             schemas: {
-                // Common schemas
                 Pagination: {
                     type: 'object',
                     properties: {
@@ -115,16 +120,6 @@ Authorization: Bearer {access_token}
                             properties: {
                                 code: { type: 'string', example: 'VALIDATION_ERROR' },
                                 message: { type: 'string', example: 'Invalid input' },
-                                details: {
-                                    type: 'array',
-                                    items: {
-                                        type: 'object',
-                                        properties: {
-                                            field: { type: 'string' },
-                                            message: { type: 'string' },
-                                        },
-                                    },
-                                },
                             },
                         },
                     },
@@ -138,9 +133,10 @@ Authorization: Bearer {access_token}
             ...auth_paths_1.authPaths,
             ...user_paths_1.userPaths,
             ...story_paths_1.storyPaths,
+            ...allPaths_1.allPaths,
         },
     },
-    apis: [], // We're defining paths manually
+    apis: [],
 };
 function setupSwagger(app) {
     const swaggerSpec = (0, swagger_jsdoc_1.default)(options);
@@ -148,7 +144,6 @@ function setupSwagger(app) {
         customCss: '.swagger-ui .topbar { display: none }',
         customSiteTitle: 'VYRA API Documentation',
     }));
-    // Serve raw swagger JSON
     app.get('/api-docs.json', (req, res) => {
         res.setHeader('Content-Type', 'application/json');
         res.send(swaggerSpec);

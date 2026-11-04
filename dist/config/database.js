@@ -1,19 +1,6 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.connectDatabase = void 0;
-const mongoose_1 = __importDefault(require("mongoose"));
-const env_1 = require("./env");
-const connectDatabase = async () => {
-    try {
-        await mongoose_1.default.connect(env_1.config.mongodbUri);
-        console.log('Successfully connected to MongoDB');
-    }
-    catch (error) {
-        console.error('Error connecting to MongoDB', error);
-        process.exit(1);
-    }
-};
-exports.connectDatabase = connectDatabase;
+exports.connectDatabase = exports.prisma = void 0;
+var prisma_1 = require("./prisma");
+Object.defineProperty(exports, "prisma", { enumerable: true, get: function () { return prisma_1.prisma; } });
+Object.defineProperty(exports, "connectDatabase", { enumerable: true, get: function () { return prisma_1.connectDatabase; } });

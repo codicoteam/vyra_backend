@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const draft_controller_1 = require("../controllers/draft.controller");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticate);
+router.post('/', draft_controller_1.createDraft);
+router.get('/', draft_controller_1.getDrafts);
+router.get('/:id', draft_controller_1.getDraftById);
+router.put('/:id', draft_controller_1.updateDraft);
+router.delete('/:id', draft_controller_1.deleteDraft);
+exports.default = router;

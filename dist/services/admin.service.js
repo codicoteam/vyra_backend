@@ -1,36 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAdminDashboardStats = getAdminDashboardStats;
-const user_model_1 = require("../models/user.model");
-const story_model_1 = require("../models/story.model");
-const report_model_1 = require("../models/report.model");
+const prisma_1 = require("../config/prisma");
 async function getAdminDashboardStats() {
+    const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const [totalUsers, newUsersToday, newUsersThisWeek, totalStories, publishedToday, pendingReview, totalAnonymous, unresolvedReports,] = await Promise.all([
-        user_model_1.User.countDocuments({ deletedAt: null }),
-        user_model_1.User.countDocuments({
-            createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) },
-            deletedAt: null,
-        }),
-        user_model_1.User.countDocuments({
-            createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-            deletedAt: null,
-        }),
-        story_model_1.Story.countDocuments({ deletedAt: null }),
-        story_model_1.Story.countDocuments({
-            publishedAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) },
-            status: 'published',
-            deletedAt: null,
-        }),
-        story_model_1.Story.countDocuments({
-            moderationStatus: 'pending',
-            deletedAt: null,
-        }),
-        story_model_1.Story.countDocuments({
-            isAnonymous: true,
-            status: 'published',
-            deletedAt: null,
-        }),
-        report_model_1.Report.countDocuments({ status: 'pending' }),
+        prisma_1.prisma.user.count({ where: { deletedAt: null } }),
+        prisma_1.prisma.user.count({ where: { createdAt: { gte: startOfDay }, deletedAt: null } }),
+        prisma_1.prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo }, deletedAt: null } }),
+        prisma_1.prisma.post.count({ where: { deletedAt: null } }),
+        prisma_1.prisma.post.count({ where: { publishedAt: { gte: startOfDay }, status: 'PUBLISHED', deletedAt: null } }),
+        prisma_1.prisma.post.count({ where: { moderationStatus: 'PENDING', deletedAt: null } }),
+        prisma_1.prisma.post.count({ where: { isAnonymous: true, status: 'PUBLISHED', deletedAt: null } }),
+        prisma_1.prisma.report.count({ where: { status: 'PENDING' } }),
     ]);
     return {
         totalUsers,

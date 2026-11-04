@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const emailDigest_controller_1 = require("../controllers/emailDigest.controller");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticate);
+router.post('/send', emailDigest_controller_1.sendDigest);
+router.get('/history', emailDigest_controller_1.getDigestHistory);
+router.put('/preferences', emailDigest_controller_1.updateDigestPreferences);
+exports.default = router;

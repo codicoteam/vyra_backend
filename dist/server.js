@@ -6,10 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("./app"));
 const env_1 = require("./config/env");
 const database_1 = require("./config/database");
-const seeder_1 = require("./utils/seeder");
 const startServer = async () => {
     await (0, database_1.connectDatabase)();
-    await (0, seeder_1.seedDatabase)();
     app_1.default.listen(env_1.config.port, () => {
         console.log(`Server is running in ${env_1.config.nodeEnv} mode on port ${env_1.config.port}`);
     });

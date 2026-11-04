@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const recommendations_controller_1 = require("../controllers/recommendations.controller");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.get('/', recommendations_controller_1.getRecommendations);
+router.get('/following', auth_1.authenticate, recommendations_controller_1.getFollowingRecommendations);
+router.get('/trending', recommendations_controller_1.getTrendingRecommendations);
+exports.default = router;

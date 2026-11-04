@@ -7,7 +7,13 @@ import morgan from 'morgan';
 import { setupSwagger } from './swagger';
 import { errorHandler } from './middleware/errorHandler';
 import apiRoutes from './routes';
-import { getHealth, getDatabaseHealth, getVersion, getStatus } from './controllers/system.controller';
+import {
+  getHealth,
+  getDatabaseHealth,
+  getVersion,
+  getStatus,
+} from './controllers/system.controller';
+import path from 'path';
 
 const app = express();
 
@@ -33,5 +39,15 @@ app.use('/api/v1', apiRoutes);
 app.use('/api', apiRoutes); // unversioned route mapping for convenience
 
 app.use(errorHandler);
+
+// ...
+app.use(
+  '/uploads',
+  (_req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  },
+  express.static(path.join(process.cwd(), 'uploads')),
+);
 
 export default app;

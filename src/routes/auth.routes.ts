@@ -10,7 +10,8 @@ import {
   getMe,
   changePassword,
   getAdminStatus,
-  setupFirstAdmin
+  googleLogin,
+  setupFirstAdmin,
 } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth';
 
@@ -28,5 +29,6 @@ router.post('/reset-password', resetPassword);
 router.post('/verify-email', verifyEmail);
 router.get('/me', authenticate, getMe);
 router.put('/change-password', authenticate, changePassword);
+router.post('/google', googleLogin);
 
 export default router;
