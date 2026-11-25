@@ -37,8 +37,11 @@ export const getFollowingFeed = async (req: AuthRequest, res: Response) => {
   const follows = await prisma.follow.findMany({ where: { followerId: req.user.id } });
   const followingUserIds = follows.map((f: any) => f.followingId);
 
+  // Never include anonymous posts here: listing them under a followed author would de-anonymize them
+  const where = { userId: { in: followingUserIds }, status: 'PUBLISHED' as any, deletedAt: null, isAnonymous: false };
+
   const posts = await prisma.post.findMany({
-    where: { userId: { in: followingUserIds }, status: 'PUBLISHED' as any, deletedAt: null },
+    where,
     include: {
       author: { select: { id: true, username: true, fullName: true, avatarUrl: true } },
       category: { select: { id: true, name: true, slug: true, color: true } }
@@ -48,7 +51,7 @@ export const getFollowingFeed = async (req: AuthRequest, res: Response) => {
     take: limit
   });
 
-  const total = await prisma.post.count({ where: { userId: { in: followingUserIds }, status: 'PUBLISHED' as any, deletedAt: null } });
+  const total = await prisma.post.count({ where });
 
   res.status(200).json({
     success: true,

@@ -230,7 +230,9 @@ export const googleLogin = async (req: Request, res: Response) => {
       data: { user: safeUser, accessToken, refreshToken },
       message: 'Login successful',
     });
-  } catch {
+  } catch (err: any) {
+    // Log the real cause (bad audience, expired token, DB error…) – the client only sees a generic message
+    console.error('[auth/google] sign-in failed:', err?.message || err);
     return res.status(401).json({
       success: false,
       error: { code: 'INVALID_GOOGLE_TOKEN', message: 'Google sign-in failed' },

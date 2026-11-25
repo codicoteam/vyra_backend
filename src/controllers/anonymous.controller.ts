@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/prisma';
 import { AuthRequest } from '../middleware/auth';
+import { notifyPostPublished } from '../utils/mailer';
 
 export const publishAnonymous = async (req: Request, res: Response) => {
   const { title, excerpt, content, coverImage, category } = req.body;
@@ -60,6 +61,8 @@ export const approveAnonymous = async (req: AuthRequest, res: Response) => {
       publishedAt: new Date()
     }
   });
+
+  if (post.status !== 'PUBLISHED') notifyPostPublished(updated.id);
 
   res.status(200).json({ success: true, data: updated, message: 'Anonymous post approved and published' });
 };

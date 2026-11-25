@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/prisma';
 import { AuthRequest } from '../middleware/auth';
+import { notifyPostPublished } from '../utils/mailer';
 
 export const createPost = async (req: AuthRequest, res: Response) => {
   const { title, excerpt, content, coverImage, category, isAnonymous, isResearch, isCampaign, status } = req.body;
@@ -34,6 +35,8 @@ export const createPost = async (req: AuthRequest, res: Response) => {
         publishedAt: postStatus === 'DRAFT' ? null : new Date(),
       }
     });
+
+    if (post.status === 'PUBLISHED') notifyPostPublished(post.id);
 
     res.status(201).json({ success: true, data: post, message: 'Post created successfully' });
   } catch (error: any) {
@@ -196,6 +199,8 @@ export const updatePost = async (req: AuthRequest, res: Response) => {
       data: req.body
     });
 
+    if (post.status !== 'PUBLISHED' && updated.status === 'PUBLISHED') notifyPostPublished(updated.id);
+
     res.status(200).json({ success: true, data: updated, message: 'Post updated successfully' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: { message: error.message } });
@@ -236,10 +241,21 @@ export const publishPost = async (req: AuthRequest, res: Response) => {
   if (!user) return res.status(401).json({ success: false, error: { message: 'Unauthorized' } });
 
   try {
+    const existing = await prisma.post.findFirst({ where: { id, deletedAt: null } });
+    if (!existing) {
+      return res.status(404).json({ success: false, error: { message: 'Post not found' } });
+    }
+    if (existing.userId !== user.id && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN' && user.role !== 'EDITOR') {
+      return res.status(403).json({ success: false, error: { message: 'Forbidden' } });
+    }
+
     const post = await prisma.post.update({
       where: { id },
-      data: { status: 'PUBLISHED' as any, publishedAt: new Date() }
+      data: { status: 'PUBLISHED' as any, publishedAt: existing.publishedAt ?? new Date() }
     });
+
+    // Only email on the transition to PUBLISHED, not on re-publish
+    if (existing.status !== 'PUBLISHED') notifyPostPublished(post.id);
 
     res.status(200).json({ success: true, data: post, message: 'Post published successfully' });
   } catch (error: any) {
