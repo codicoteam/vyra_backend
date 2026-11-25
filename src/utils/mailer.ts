@@ -1,8 +1,13 @@
 import nodemailer from 'nodemailer';
 import { prisma } from '../config/prisma';
 
+// Gmail via STARTTLS on 587 (secure: requireTLS refuses to send unencrypted).
+// Port 465 is intercepted by some antivirus "mail shields" (e.g. Avast), which breaks TLS verification.
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  requireTLS: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
